@@ -23,11 +23,7 @@ namespace AsyncRequestReply.Controllers
         public async Task<ActionResult<IEnumerable<ApiTaskDTO>>> ListApiTasks()
         {
             var apiTasks = await _tasksManager.ListApiTasksAsync();
-            
-            return apiTasks.Select(apiTask => {
-                var epochSeconds = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
-                return ApiTaskToDTO(apiTask, epochSeconds);
-            }).ToList();
+            return apiTasks.Select(apiTask => ApiTaskToDTO(apiTask)).ToList();
         }
 
         [HttpPost]
@@ -35,6 +31,7 @@ namespace AsyncRequestReply.Controllers
         {
             var apiTask = new ApiTask
             {
+                TaskId = apiTaskDTO.TaskId,
                 Name = apiTaskDTO.Name,
                 SubmittedAt = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds()
             };
@@ -47,14 +44,13 @@ namespace AsyncRequestReply.Controllers
                 ApiTaskToDTO(apiTask));
         }
 
-        private static ApiTaskDTO ApiTaskToDTO(ApiTask apiTask, long epochSeconds = 0) =>
+        private static ApiTaskDTO ApiTaskToDTO(ApiTask apiTask) =>
             new ApiTaskDTO
             {
                 Id = apiTask.Id,
+                TaskId = apiTask.TaskId,
                 Name = apiTask.Name,
-                Status = epochSeconds - apiTask.SubmittedAt > 8 ?
-                                                                ApiTaskStatus.COMPLETED :
-                                                                ApiTaskStatus.CREATED
+                Status = apiTask.Status
             };
     }
 }
